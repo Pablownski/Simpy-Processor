@@ -45,16 +45,25 @@ class Proceso:
                     yield self.env.timeout(random.randint(1, 5))
                     print(f"{self.name} espera en I/O")
         self.ram.put(memoria_requerida)
+        tiempos.append(self.env.now - self.tiempo_inicio)
         print("RAM actual: ", self.ram.level)
 
-# Simulación básica
-env = simpy.Environment()
-cpu = simpy.Resource(env, 1)
-ram = simpy.Container(env, 100, 100)
+def correr_simulacion(num_procesos, intervalo, ram_size, cpu_speed, num_cpus):
+    global tiempos
+    tiempos = []
+    
+    env = simpy.Environment()
+    ram = simpy.Container(env, init=ram_size, capacity=ram_size)
+    cpu = simpy.Resource(env, capacity=num_cpus)
+    
+    def generar_procesos(env):
+        for i in range(num_procesos):
+            yield env.timeout(random.expovariate(1.0 / intervalo))
+            Proceso(env, f"Proceso-{i}", ram, cpu, random.randint(1, 10), cpu_speed)
+    print("RAM inicial: ", ram.capacity)
+    env.process(generar_procesos(env))
+    env.run()
+    
+    return np.mean(tiempos), np.std(tiempos)
 
-print("RAM inicial: ", ram.capacity)
-proceso1 = Proceso(env, "Proceso 1", ram, cpu, random.randint(1,10), 3)
-proceso2 = Proceso(env, "Proceso 2", ram, cpu, random.randint(1,10), 3)
-proceso3 = Proceso(env, "Proceso 3", ram, cpu, random.randint(1,10), 3)
 
-env.run(until=env.now + 11) # 10 ticks de prueba
