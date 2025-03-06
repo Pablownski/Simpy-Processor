@@ -66,4 +66,34 @@ def correr_simulacion(num_procesos, intervalo, ram_size, cpu_speed, num_cpus):
     
     return np.mean(tiempos), np.std(tiempos)
 
+num_procesos_lista = [25, 50, 100, 150, 200]
+intervalos = [10, 5, 1]
+configuraciones = [
+    ("Memoria 100, CPU normal", 100, 3, 1),
+    ("Memoria 200, CPU normal", 200, 3, 1),
+    ("Memoria 100, CPU rápido (6 instrucciones / ciclo)", 100, 6, 1),
+    ("Memoria 100, 2 CPUs", 100, 3, 2),
+]
 
+resultados = []
+for nombre_config, ram_size, cpu_speed, num_cpus in configuraciones:
+    for intervalo in intervalos:
+        tiempos_medios = []
+        desviaciones = []
+        for num_procesos in num_procesos_lista:
+            tiempo_medio, desviacion = correr_simulacion(num_procesos, intervalo, ram_size, cpu_speed, num_cpus)
+            tiempos_medios.append(tiempo_medio)
+            desviaciones.append(desviacion)
+        resultados.append((nombre_config, intervalo, tiempos_medios, desviaciones))
+
+fig_num = 1
+for nombre_config, intervalo, tiempos_medios, desviaciones in resultados:
+    plt.figure(fig_num)
+    plt.errorbar(num_procesos_lista, tiempos_medios, yerr=desviaciones, fmt='-o', capsize=5)
+    plt.xlabel("Número de Procesos")
+    plt.ylabel("Tiempo Promedio de Ejecución (unidades de tiempo)")
+    plt.title(f"{nombre_config} (Intervalo {intervalo})")
+    plt.grid(True)
+    plt.savefig(f"grafica_{fig_num}.png")
+    plt.show() 
+    fig_num += 1
